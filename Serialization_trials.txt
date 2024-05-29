@@ -1,0 +1,18 @@
+### Context ###
+In two-dimensional space, you will travel between 10 stations. You should visit each station once and return to the starting station at last. Each station is represented with a 2-dimensional Cartesian point ( x , y ) where x is the coordinate on the X-axis and y is the coordinate on the Y-axis. The formula calculates the Euclidean distance between stations is " ( ( X1 - X2 ) ^ 2 + ( Y1 - Y1 ) ^ 2 ) ^ 0.5 ". 
+
+### Instructions ### 
+Your task is to find the visiting order for the stations that minimizes the total distance you will travel to finish the journey. 
+
+Let’s work this out step-by-step to ensure we have the right answer. First, make a matrix of the Euclidean distance between all possible pairs of stations. Then, compare all the possible stations' orders to find the order that costs the minimum total traveling distance of the journey. At last, Sum the distances between the stations according to the order you find.
+
+### Stations ###
+station 0 ( 288 , 149 ), station 1 ( 288 , 129 ), station 2 ( 270 , 133 ), station 3 ( 256 , 141 ), station 4 ( 256 , 157 ), station 5 ( 246 , 157 ), station 6 ( 236 , 169 ), station 7 ( 228 , 169 ), station 8 ( 228 , 161 ), and station 9 ( 220 , 169 ).
+
+### Answer Format ###
+Distance matrix,
+Stations' order with minimum total traveling distance,
+traveling distance.
+
+### Answer ###
+

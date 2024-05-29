@@ -1,0 +1,90 @@
+/**
+ * In this file we expect to set model tsp-003 trained on data with 15 points
+ * and get 11 responses for each response.
+ */
+import { createPrompt, getFileContent, getPreviousResponses, makeRequest, writeDataToFile } from '../utilities.js';
+
+
+function main() {
+
+    const chunksToRequest = [5, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 27, 32];
+    const chunk = 27;
+    const prevChunk = 22;
+    const fileName = "../../generated_data/test_data.json";
+    const testData = getFileContent(fileName);
+    const promptChunks = createPromptChunks(testData);
+    const responseFileName = `../../generated_data/tsp_003/model_responses_${prevChunk}.json`;
+    const newResponseFileName = `../../generated_data/tsp_003/model_responses_${chunk}.json`;
+    const modelName = "ft:gpt-3.5-turbo-0125:kfupm:tsp-001:8zWmjfNu";
+
+
+    const testChunks = {[chunk]: promptChunks[chunk]};
+    console.log(Object.keys(testChunks));
+    collectResponses(testChunks, responseFileName, newResponseFileName, modelName);
+
+
+    // collectResponses(promptChunks, responseFileName, modelName);
+    // console.log(Object.keys(promptChunks[5]));
+    // console.log(promptChunks[5])
+
+}
+
+
+function createPromptChunks(dataObj) {
+    const promptChunks = {};
+    for(let chunk_size in dataObj) {
+        const promptChunk = dataObj[chunk_size].map(createPrompt);
+        promptChunks[chunk_size] = promptChunk.map(prompt => prompt.messages);
+    }
+    return promptChunks;
+}
+
+
+
+// collect 11 responses for each prompt
+async function collectResponses(promptChunks, responseFileName, newResponseFileName, modelName) {
+    let responsesChunks = getPreviousResponses(responseFileName);
+    let requestCounter = 0;
+    const temperature = 0.7;
+    const numResponsesPerJourney = 1;
+
+    for(let chunk in promptChunks) {
+        const promptChunk = promptChunks[chunk];
+        await Promise.all(promptChunk.map( async (prompt, idx) => {
+            for (let resCounter=0; resCounter<numResponsesPerJourney; resCounter++) {
+
+                // check how many previous responses exist
+                console.log(`*********Handle ${chunk}_${idx}_${resCounter}********`);
+                let prevResExist = responsesChunks[chunk] && responsesChunks[chunk].filter( res => res.requestId == idx)
+                console.log("Existing responses:", prevResExist && prevResExist.length); ;
+                if(prevResExist && prevResExist.length >= numResponsesPerJourney) return;
+    
+                // start making requests
+                try {
+                    const response = await makeRequest(prompt, modelName, temperature, idx)
+                    requestCounter++;
+                    if(response) {
+                        console.log(`request{${chunk}_${idx}_${resCounter}} succeed`,)
+                        console.log(`request num: ${requestCounter}`)
+                        if(!responsesChunks[chunk]) {
+                            responsesChunks[chunk] = [response];
+                        } else {
+                            responsesChunks[chunk].push(response);
+                        }
+                    }
+                } catch(err) {
+                    console.log("### Error ###")
+                    console.error(err);
+                    console.log(`number of new requests: ${requestCounter}`)
+                    writeDataToFile(responsesChunks, newResponseFileName);
+                }
+            }
+            
+        }))
+        console.log(`number of new requests: ${requestCounter}`)
+        writeDataToFile(responsesChunks, newResponseFileName);
+    }
+}
+
+
+main();
